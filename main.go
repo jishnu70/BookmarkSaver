@@ -1,10 +1,16 @@
 package main
 
 import (
+	"bookmarksaver/initializers"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
+
+func init() {
+	initializers.LoadEnv()
+	initializers.ConntectDB()
+}
 
 func main() {
 	r := gin.Default()
