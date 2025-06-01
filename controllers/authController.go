@@ -21,9 +21,7 @@ func CreateUsers(ctx *gin.Context) {
 	}
 
 	var userFound models.User
-	initializers.DB.Where("username=?", authInput.Username).Find(&userFound)
-
-	if userFound.ID != 0 {
+	if result := initializers.DB.Where("username=?", authInput.Username).First(&userFound); result.Error == nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "username already used"})
 		return
 	}
@@ -46,7 +44,10 @@ func CreateUsers(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusCreated, gin.H{
-		"User": user,
+		"user": gin.H{
+			"id":       user.ID,
+			"username": user.Username,
+		},
 	})
 }
 
@@ -59,9 +60,7 @@ func Login(ctx *gin.Context) {
 	}
 
 	var userFound models.User
-	initializers.DB.Where("username=?", authInput.Username).Find(&userFound)
-
-	if userFound.ID == 0 {
+	if result := initializers.DB.Where("username=?", authInput.Username).First(&userFound); result.Error != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "user not found"})
 		return
 	}
@@ -76,10 +75,17 @@ func Login(ctx *gin.Context) {
 		"exp": time.Now().Add(time.Hour * 24).Unix(),
 	})
 
-	token, err := generateToken.SignedString([]byte(os.Getenv("SECRET")))
+	secret := os.Getenv("SECRET")
+	if secret == "" {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "JWT secret not configured"})
+		return
+	}
+
+	token, err := generateToken.SignedString([]byte(secret))
 
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "failed to generate token"})
+		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
