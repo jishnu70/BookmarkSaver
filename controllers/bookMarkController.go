@@ -10,6 +10,7 @@ import (
 )
 
 func AddBookMark(ctx *gin.Context) {
+	userID := ctx.MustGet("userID").(uint)
 	var inputData models.CreateBookmarkInput
 
 	if err := ctx.ShouldBindJSON(&inputData); err != nil {
@@ -36,9 +37,10 @@ func AddBookMark(ctx *gin.Context) {
 	}
 
 	bookMark := models.Bookmark{
-		Title: inputData.Title,
-		URL:   inputData.URL,
-		Tags:  tags,
+		Title:  inputData.Title,
+		URL:    inputData.URL,
+		Tags:   tags,
+		UserID: userID,
 	}
 
 	if err := initializers.DB.Create(&bookMark).Error; err != nil {
@@ -52,9 +54,10 @@ func AddBookMark(ctx *gin.Context) {
 }
 
 func GetAllBookmark(ctx *gin.Context) {
+	userID := ctx.MustGet("userID").(uint)
 	var bookMarks []models.Bookmark
 
-	if err := initializers.DB.Preload("Tags").Find(&bookMarks).Error; err != nil {
+	if err := initializers.DB.Preload("Tags").Where("user_id=?", userID).Find(&bookMarks).Error; err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{
 			"error": err.Error(),
 		})
@@ -67,11 +70,12 @@ func GetAllBookmark(ctx *gin.Context) {
 }
 
 func GetBookMarkByID(ctx *gin.Context) {
+	userID := ctx.MustGet("userID").(uint)
 	id := ctx.Param("id")
 
 	var bookMark models.Bookmark
 
-	if err := initializers.DB.Preload("Tags").First(&bookMark, id).Error; err != nil {
+	if err := initializers.DB.Preload("Tags").Where("id=? AND user_id=?", id, userID).First(&bookMark).Error; err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{
 			"error": err.Error(),
 		})
@@ -84,11 +88,12 @@ func GetBookMarkByID(ctx *gin.Context) {
 }
 
 func UpdateBookMark(ctx *gin.Context) {
+	userID := ctx.MustGet("userID").(uint)
 	id := ctx.Param("id")
 
 	var bookMark models.Bookmark
 
-	if err := initializers.DB.Preload("Tags").First(&bookMark, id).Error; err != nil {
+	if err := initializers.DB.Preload("Tags").Where("id=? AND user_id=?", id, userID).First(&bookMark).Error; err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{
 			"error": err.Error(),
 		})
@@ -136,11 +141,12 @@ func UpdateBookMark(ctx *gin.Context) {
 }
 
 func DeleteBookmark(ctx *gin.Context) {
+	userID := ctx.MustGet("userID").(uint)
 	id := ctx.Param("id")
 
 	var bookMark models.Bookmark
 
-	if err := initializers.DB.Preload("Tags").First(&bookMark, id).Error; err != nil {
+	if err := initializers.DB.Preload("Tags").Where("id=? AND user_id=?", id, userID).First(&bookMark).Error; err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{
 			"error": err.Error(),
 		})
