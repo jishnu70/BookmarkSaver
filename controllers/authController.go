@@ -4,7 +4,6 @@ import (
 	"bookmarksaver/initializers"
 	"bookmarksaver/models"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -71,17 +70,11 @@ func Login(ctx *gin.Context) {
 	}
 
 	generateToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"id":  userFound.ID,
-		"exp": time.Now().Add(time.Hour * 24).Unix(),
+		"user_id": userFound.ID,
+		"exp":     time.Now().Add(time.Hour * 24).Unix(),
 	})
 
-	secret := os.Getenv("SECRET")
-	if secret == "" {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "JWT secret not configured"})
-		return
-	}
-
-	token, err := generateToken.SignedString([]byte(secret))
+	token, err := generateToken.SignedString([]byte(initializers.JWT_SECRET))
 
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "failed to generate token"})
