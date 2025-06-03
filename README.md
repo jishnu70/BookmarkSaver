@@ -107,12 +107,6 @@ go run main.go
 
 ---
 
-## 🧠 Author
-
-- **@jishnu70**
-
----
-
 ## 🏁 Future Improvements
 
 - 🔄 Refresh tokens
